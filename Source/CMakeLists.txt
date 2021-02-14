@@ -14,7 +14,13 @@ set(SOURCES
 )
 
 add_library(ServiceStatic STATIC ${SOURCES})
-target_link_libraries(ServiceStatic ${Boost_LIBRARIES} spdlog WatchdogServiceProto)
+target_link_libraries(ServiceStatic
+        PUBLIC
+    ${Boost_LIBRARIES}
+    spdlog
+    WatchdogServiceProto
+    ${PROTOBUF_LIBRARY}
+)
 target_include_directories(ServiceStatic
         PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/include 

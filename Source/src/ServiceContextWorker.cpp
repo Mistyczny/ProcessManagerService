@@ -42,19 +42,18 @@ void ContextWorker::startRead() {
 
 void ContextWorker::handle_receive(const boost::system::error_code& error, std::size_t) {
     if (error) {
-        std::cout << "ERR " + error.message() << std::endl;
         return;
     }
     std::string receivedMessage{std::begin(buffer), std::end(buffer)};
     this->startRead();
     // Add handle
-    std::cout << "MESSAGE RECEIVEDEDED" << std::endl;
     int receivedKey = 1;
     auto iter = serviceEventsMap.equal_range(receivedKey);
     for (auto& itt = iter.first; itt != iter.second; itt++) {
-        std::cout << "EVENT" << std::endl;
         itt->second->handleReceivedMessage(receivedMessage);
     }
 }
+
+void ContextWorker::stopIoContext() { ioContext.stop(); }
 
 } // namespace Service

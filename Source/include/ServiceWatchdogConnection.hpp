@@ -18,13 +18,14 @@ protected:
     void handleResponse(std::unique_ptr<WatchdogResponseHandler>, std::string&);
     void processCaughtResponseException(WatchdogResponseHandlerException& exception);
 
+public:
+    explicit WatchdogConnection(boost::asio::io_context& ioContext, WatchdogConnectionState& watchdogConnectionState);
+    ~WatchdogConnection() override = default;
+
     void sendConnectRequest();
     void sendPingRequest();
     void sendReconnectRequest();
     void sendShutdownRequest();
-public:
-    explicit WatchdogConnection(boost::asio::io_context& ioContext, WatchdogConnectionState& watchdogConnectionState);
-    ~WatchdogConnection() override = default;
 };
 
 } // namespace Service
