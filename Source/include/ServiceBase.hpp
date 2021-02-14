@@ -1,9 +1,10 @@
 #pragma once
 #include "Event.hpp"
-#include "ServiceConnection.hpp"
 #include "ServiceContextWorker.hpp"
 #include "ServiceModulesServer.hpp"
 #include "ServiceTask.hpp"
+#include "ServiceWatchdogConnection.hpp"
+#include "ServiceWatchdogConnectionState.hpp"
 #include <boost/asio.hpp>
 #include <map>
 #include <thread>
@@ -16,6 +17,7 @@ private:
     std::multimap<uint32_t, std::unique_ptr<EventInterface>> serviceEventsMap;
     Task task{};
     std::vector<ContextWorker> contextWorkers;
+    WatchdogConnectionState watchdogConnectionState{};
     std::shared_ptr<WatchdogConnection> watchdogConnection{nullptr};
     ModulesServer modulesServer;
 
