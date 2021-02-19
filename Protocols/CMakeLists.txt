@@ -23,6 +23,6 @@ ExternalProject_Add(WatchdogServiceProtocolDownload
 )
 
 include_directories(${PROTOBUF_INCLUDE_DIR})
-PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER ${WatchdogServiceProtocolDir}/WatchdogService.proto)
+protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${WatchdogServiceProtocolDir}/WatchdogService.proto)
 add_library(WatchdogServiceProto ${PROTO_HEADER} ${PROTO_SRC})
 add_dependencies(WatchdogServiceProto WatchdogServiceProtocolDownload)
