@@ -23,9 +23,10 @@ private:
 
 public:
     Base();
-    virtual ~Base() = default;
+    virtual ~Base();
 
-    void connectWatchdog();
+    bool connectToWatchdog();
+    bool waitForConnectResponse();
     void joinAll();
     void readAll();
 

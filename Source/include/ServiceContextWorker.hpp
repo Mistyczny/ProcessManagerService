@@ -32,6 +32,7 @@ public:
     void startRead();
     void runAll();
     void handle_receive(const boost::system::error_code& error, std::size_t);
+    void stopIoContext();
 };
 
 } // namespace Service

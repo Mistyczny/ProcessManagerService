@@ -4,3 +4,4 @@ add_library(catchTestMain STATIC CatchTestsMain.cpp)
 target_link_libraries(catchTestMain PUBLIC Catch2::Catch2)
 
 add_subdirectory(ServiceWatchdogResponseHandlersTests)
+add_subdirectory(ExampleServicesTests)

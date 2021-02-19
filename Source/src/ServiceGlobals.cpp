@@ -2,6 +2,6 @@
 
 namespace Service {
 namespace Globals {
-extern Types::ServiceIdentifier serviceIdentifier;
+Types::ServiceIdentifier serviceIdentifier;
 } // namespace Globals
 } // namespace Service
