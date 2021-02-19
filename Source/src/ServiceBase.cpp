@@ -5,6 +5,9 @@
 namespace Service {
 
 Base::Base() : modulesServer{contextWorkers} {
+    for (int i = 0; i < 1; i++) {
+        contextWorkers.emplace_back(ioContextThreads, serviceEventsMap);
+    }
     watchdogConnection = std::make_shared<WatchdogConnection>(contextWorkers.front().getContext(), watchdogConnectionState);
 }
 

@@ -16,15 +16,14 @@ set(SOURCES
 add_library(ServiceStatic STATIC ${SOURCES})
 target_link_libraries(ServiceStatic
         PUBLIC
-    ${Boost_LIBRARIES}
+    pthread
     spdlog
     WatchdogServiceProto
     ${PROTOBUF_LIBRARY}
 )
 target_include_directories(ServiceStatic
         PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include 
-    ${BOOST_ROOT} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${SpdlogInclude} 
     ${CMAKE_BINARY_DIR}/Protocols
 )
@@ -32,3 +31,5 @@ target_include_directories(ServiceStatic
 target_compile_features(ServiceStatic PRIVATE cxx_constexpr)
 target_compile_features(ServiceStatic PRIVATE cxx_nullptr)
 target_compile_features(ServiceStatic PRIVATE cxx_override)
+
+install(TARGETS ServiceStatic DESTINATION /usr/local/lib64)

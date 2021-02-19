@@ -8,11 +8,14 @@ ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads,
                              std::multimap<uint32_t, std::unique_ptr<EventInterface>>& serviceEventsMap)
     : ioContextThreads{ioContextThreads}, serviceEventsMap{serviceEventsMap} {
     boost::asio::socket_base::reuse_address option(true);
-    auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 13);
+    std::cout << 1 << std::endl;
+    auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 12234);
     socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
     socket->open(endpoint.protocol());
     socket->set_option(option);
+    std::cout << 2 << std::endl;
     socket->bind(endpoint);
+    std::cout << 3 << std::endl;
 }
 
 ContextWorker::ContextWorker(ContextWorker&& other) noexcept

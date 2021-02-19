@@ -1,4 +1,5 @@
 #include "ServiceBase.hpp"
+#include <iostream>
 
 int main() {
     Service::Base serviceBase{};
