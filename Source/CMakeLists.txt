@@ -21,11 +21,12 @@ target_link_libraries(ServiceStatic
     WatchdogServiceProto
     ${PROTOBUF_LIBRARY}
 )
+
 target_include_directories(ServiceStatic
-        PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${SpdlogInclude} 
-    ${CMAKE_BINARY_DIR}/Protocols
+        PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Protocols>"
+    "$<INSTALL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 
 target_compile_features(ServiceStatic PRIVATE cxx_constexpr)
