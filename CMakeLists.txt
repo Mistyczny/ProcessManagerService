@@ -16,3 +16,8 @@ set(artifactoryDownloader ${CMAKE_SOURCE_DIR}/Toolkits/artifactory_downloader.sh
 add_subdirectory(Protocols)
 add_subdirectory(Source)
 add_subdirectory(Tests)
+
+add_library(ServiceStatic::ServiceStatic STATIC IMPORTED)
+set_target_properties(ServiceStatic::ServiceStatic PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/Source/include"
+)
