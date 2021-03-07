@@ -19,6 +19,7 @@ target_link_libraries(ServiceStatic
     pthread
     spdlog
     WatchdogServiceProto
+    ServiceModuleProto
     ${PROTOBUF_LIBRARY}
 )
 target_include_directories(ServiceStatic
