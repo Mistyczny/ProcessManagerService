@@ -17,7 +17,9 @@ private:
     std::unique_ptr<boost::asio::ip::udp::socket> socket{nullptr};
     boost::asio::ip::udp::endpoint clientEndpoint{};
     std::array<char, 1024> buffer{};
-    std::string str{};
+    std::string messageBuffer{};
+
+    void handleReadError(const boost::system::error_code& error);
 
 public:
     explicit ContextWorker(std::vector<std::thread>& ioContextThreads, std::multimap<uint32_t, std::unique_ptr<EventInterface>>&);
@@ -31,7 +33,6 @@ public:
 
     void startRead();
     void runAll();
-    void handle_receive(const boost::system::error_code& error, std::size_t);
     void stopIoContext();
 };
 

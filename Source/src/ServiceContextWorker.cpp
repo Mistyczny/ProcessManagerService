@@ -1,4 +1,6 @@
 #include "ServiceContextWorker.hpp"
+#include "Logging.hpp"
+#include "ServiceModule.pb.h"
 #include <boost/bind.hpp>
 #include <iostream>
 
@@ -8,14 +10,11 @@ ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads,
                              std::multimap<uint32_t, std::unique_ptr<EventInterface>>& serviceEventsMap)
     : ioContextThreads{ioContextThreads}, serviceEventsMap{serviceEventsMap} {
     boost::asio::socket_base::reuse_address option(true);
-    std::cout << 1 << std::endl;
     auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 12234);
     socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
     socket->open(endpoint.protocol());
     socket->set_option(option);
-    std::cout << 2 << std::endl;
     socket->bind(endpoint);
-    std::cout << 3 << std::endl;
 }
 
 ContextWorker::ContextWorker(ContextWorker&& other) noexcept
@@ -35,27 +34,33 @@ void ContextWorker::runAll() {
 }
 
 void ContextWorker::startRead() {
-    memset(&buffer, 0, buffer.size());
-    str.resize(1024);
     if (socket) {
-        socket->async_receive(boost::asio::buffer(str), boost::bind(&ContextWorker::handle_receive, this, boost::asio::placeholders::error,
-                                                                    boost::asio::placeholders::bytes_transferred));
+        socket->async_receive(boost::asio::buffer(messageBuffer), [this](const boost::system::error_code& error, std::size_t bytesRead) {
+            if (error) {
+                this->handleReadError(error);
+            } else {
+                std::string receivedMessageBuffer{};
+                receivedMessageBuffer.reserve(bytesRead);
+                std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
+                this->startRead();
+
+                ServiceModule::Request receivedRequest{};
+                if (receivedRequest.ParseFromString(receivedMessageBuffer)) {
+                    const auto operationCode = receivedRequest.header().operationcode();
+                    auto iter = serviceEventsMap.equal_range(operationCode);
+                    for (auto& eventHandler = iter.first; eventHandler != iter.second; eventHandler++) {
+                        // Run all registered handlers
+                        eventHandler->second->handleReceivedMessage(receivedMessageBuffer);
+                    }
+                } else {
+                    Log::error("Failed to parse message from string");
+                }
+            }
+        });
     }
 }
 
-void ContextWorker::handle_receive(const boost::system::error_code& error, std::size_t) {
-    if (error) {
-        return;
-    }
-    std::string receivedMessage{std::begin(buffer), std::end(buffer)};
-    this->startRead();
-    // Add handle
-    int receivedKey = 1;
-    auto iter = serviceEventsMap.equal_range(receivedKey);
-    for (auto& itt = iter.first; itt != iter.second; itt++) {
-        itt->second->handleReceivedMessage(receivedMessage);
-    }
-}
+void ContextWorker::handleReadError(const boost::system::error_code& error) {}
 
 void ContextWorker::stopIoContext() { ioContext.stop(); }
 
