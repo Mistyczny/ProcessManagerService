@@ -1,0 +1,12 @@
+set(CPACK_DEBIAN_PACKAGE_NAME ProcessManagerService)
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Kacper Waśniowski")
+set(CPACK_PACKAGE_CONTACT "Kacper Waśniowski")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "")
+
+install(TARGETS Service PUBLIC_HEADER
+    DESTINATION
+        ${CMAKE_INSTALL_INCLUDEDIR}/ProcessManagerService
+)
+
+include(CPack)

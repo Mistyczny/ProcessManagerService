@@ -13,8 +13,10 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceGlobals.cpp
 )
 
-add_library(ServiceStatic STATIC ${SOURCES})
-target_link_libraries(ServiceStatic
+add_library(Service STATIC ${SOURCES})
+set_target_properties(Service PROPERTIES PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/ServiceTask.hpp)
+
+target_link_libraries(Service
         PUBLIC
     pthread
     spdlog
@@ -22,15 +24,19 @@ target_link_libraries(ServiceStatic
     ${PROTOBUF_LIBRARY}
 )
 
-target_include_directories(ServiceStatic
+target_include_directories(Service
         PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Protocols>"
+)
+
+target_include_directories(Service
+        PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 
-target_compile_features(ServiceStatic PRIVATE cxx_constexpr)
-target_compile_features(ServiceStatic PRIVATE cxx_nullptr)
-target_compile_features(ServiceStatic PRIVATE cxx_override)
+target_compile_features(Service PRIVATE cxx_constexpr)
+target_compile_features(Service PRIVATE cxx_nullptr)
+target_compile_features(Service PRIVATE cxx_override)
 
-install(TARGETS ServiceStatic DESTINATION /usr/local/lib64)
+add_library(Service::Service ALIAS Service)
