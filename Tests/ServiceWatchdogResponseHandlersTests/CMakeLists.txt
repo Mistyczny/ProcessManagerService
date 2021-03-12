@@ -10,8 +10,8 @@ add_executable(ServiceWatchdogConnectResponseTest ServiceWatchdogConnectResponse
 target_link_libraries(ServiceWatchdogConnectResponseTest 
         PRIVATE 
     pthread 
-    catchTestMain 
-    WatchdogServiceProto 
+    catchTestMain
+    ProtoWatchdogServiceLibrary
     ${PROTOBUF_LIBRARY}
 )
 target_include_directories(ServiceWatchdogConnectResponseTest
@@ -24,8 +24,8 @@ add_executable(ServiceWatchdogPingResponseTest ServiceWatchdogPingResponseTest.c
 target_link_libraries(ServiceWatchdogPingResponseTest 
         PRIVATE 
     pthread 
-    catchTestMain 
-    WatchdogServiceProto 
+    catchTestMain
+    ProtoWatchdogServiceLibrary
     ${PROTOBUF_LIBRARY}
 )
 target_include_directories(ServiceWatchdogPingResponseTest
@@ -38,8 +38,8 @@ add_executable(ServiceWatchdogReconnectResponseTest ServiceWatchdogReconnectResp
 target_link_libraries(ServiceWatchdogReconnectResponseTest 
         PRIVATE 
     pthread 
-    catchTestMain 
-    WatchdogServiceProto 
+    catchTestMain
+    ProtoWatchdogServiceLibrary
     ${PROTOBUF_LIBRARY}
 )
 target_include_directories(ServiceWatchdogReconnectResponseTest

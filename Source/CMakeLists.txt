@@ -1,4 +1,9 @@
-project(ServiceLibrary)
+protobuf_generate_cpp(PROTO_WATCHDOG_SERVICE_SRC PROTO_WATCHDOG_SERVICE_HEADERS
+    ${WatchdogServiceProtocolDirectory}/WatchdogService.proto
+)
+protobuf_generate_cpp(PROTO_SERVICE_MODULE_SRC PROTO_SERVICE_MODULE_HEADERS
+    ${ServiceModuleProtocolDirectory}/ServiceModule.proto
+)
 
 set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceBase.cpp
@@ -11,26 +16,42 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceWatchdogResponseHandlers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceWatchdogConnectionState.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceGlobals.cpp
+    ${PROTO_WATCHDOG_SERVICE_SRC}
+    ${PROTO_SERVICE_MODULE_SRC}
 )
 
-add_library(ServiceStatic STATIC ${SOURCES})
-target_link_libraries(ServiceStatic
+add_library(Service SHARED ${SOURCES})
+add_dependencies(Service
+    WatchdogServiceProtocolDownload
+    ServiceModuleProtocolDownload
+)
+
+set_target_properties(Service
+    PROPERTIES
+        PUBLIC_HEADER
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/ServiceTask.hpp"
+)
+
+target_link_libraries(Service
         PUBLIC
     pthread
     spdlog
-    WatchdogServiceProto
-    ServiceModuleProto
     ${PROTOBUF_LIBRARY}
 )
-target_include_directories(ServiceStatic
-        PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${SpdlogInclude} 
-    ${CMAKE_BINARY_DIR}/Protocols
+
+target_include_directories(Service
+        PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Source>"
 )
 
-target_compile_features(ServiceStatic PRIVATE cxx_constexpr)
-target_compile_features(ServiceStatic PRIVATE cxx_nullptr)
-target_compile_features(ServiceStatic PRIVATE cxx_override)
+target_include_directories(Service
+        PUBLIC
+    "$<INSTALL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
 
-install(TARGETS ServiceStatic DESTINATION /usr/local/lib64)
+target_compile_features(Service PRIVATE cxx_constexpr)
+target_compile_features(Service PRIVATE cxx_nullptr)
+target_compile_features(Service PRIVATE cxx_override)
+
+add_library(Service::Service ALIAS Service)
