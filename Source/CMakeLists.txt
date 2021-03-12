@@ -26,6 +26,7 @@ add_library(Service
 )
 add_dependencies(Service
     WatchdogServiceProtocolDownload
+    ServiceModuleProtocolDownload
 )
 
 set_target_properties(Service
