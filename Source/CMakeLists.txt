@@ -20,10 +20,7 @@ set(SOURCES
     ${PROTO_SERVICE_MODULE_SRC}
 )
 
-add_library(Service
-        SHARED
-    ${SOURCES}
-)
+add_library(Service SHARED ${SOURCES})
 add_dependencies(Service
     WatchdogServiceProtocolDownload
     ServiceModuleProtocolDownload
