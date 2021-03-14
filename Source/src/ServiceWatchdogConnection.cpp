@@ -21,16 +21,18 @@ void WatchdogConnection::handleReceivedMessage(std::unique_ptr<Communication::Me
     }
 }
 
-void WatchdogConnection::onTimerExpiration() {}
+void WatchdogConnection::onTimerExpiration() { this->sendPingRequest(); }
 
 std::unique_ptr<WatchdogResponseHandler> WatchdogConnection::getWatchdogResponseHandler(const WatchdogService::Operation& operationCode) {
     std::unique_ptr<WatchdogResponseHandler> watchdogResponseHandler{nullptr};
+    std::cout << "RECEIVED OP CODE: " << operationCode << std::endl;
+    auto startPingTimer = std::bind([&]() { this->setTimerExpiration(3000); });
     switch (operationCode) {
     case WatchdogService::Operation::ConnectResponse:
         watchdogResponseHandler = std::make_unique<WatchdogConnectResponseHandler>(this->sequenceCode, this->watchdogConnectionState);
         break;
     case WatchdogService::Operation::PingResponse:
-        watchdogResponseHandler = std::make_unique<WatchdogPingResponseHandler>(this->sequenceCode);
+        watchdogResponseHandler = std::make_unique<WatchdogPingResponseHandler>(this->sequenceCode, std::move(startPingTimer));
         break;
     case WatchdogService::Operation::ReconnectResponse:
         watchdogResponseHandler = std::make_unique<WatchdogReconnectResponseHandler>(this->sequenceCode, this->watchdogConnectionState);
@@ -95,7 +97,7 @@ void WatchdogConnection::sendPingRequest() {
 
     Communication::Message<WatchdogService::Operation> pingMessage{};
     pingRequestData.SerializeToString(&pingMessage.body);
-    pingMessage.header.operationCode = WatchdogService::Operation::ConnectRequest;
+    pingMessage.header.operationCode = WatchdogService::Operation::PingRequest;
     pingMessage.header.size = pingMessage.body.size();
 
     this->sendMessage(pingMessage);
@@ -108,7 +110,7 @@ void WatchdogConnection::sendReconnectRequest() {
 
     Communication::Message<WatchdogService::Operation> reconnectMessage{};
     reconnectRequestData.SerializeToString(&reconnectMessage.body);
-    reconnectMessage.header.operationCode = WatchdogService::Operation::ConnectRequest;
+    reconnectMessage.header.operationCode = WatchdogService::Operation::ReconnectRequest;
     reconnectMessage.header.size = reconnectMessage.body.size();
 
     this->sendMessage(reconnectMessage);

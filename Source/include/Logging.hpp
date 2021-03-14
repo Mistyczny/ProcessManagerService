@@ -16,7 +16,7 @@ public:
     template <typename T> Log(T moduleIdentifier, LogLevel logLevel) {
         logger = spdlog::basic_logger_mt("file_logger", std::string{"/home/kacper/Logs/" + std::string(moduleIdentifier) + ".log"});
         logger->set_pattern("[%H:%M:%S %z] [thread %t] %v");
-        logger->set_level(spdlog::level::err);
+        logger->set_level(spdlog::level::trace);
         spdlog::flush_every(std::chrono::seconds(3));
     }
 

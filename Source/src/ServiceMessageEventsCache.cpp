@@ -1,4 +1,5 @@
 #include "ServiceMessageEventsCache.hpp"
+#include <optional>
 
 namespace Service {
 
@@ -27,13 +28,19 @@ uint32_t MessageEventsCache::addMessageEvent(std::unique_ptr<EventInterface> new
     return messageEventID;
 }
 
-void MessageEventsCache::triggerMessageHandlers(const google::protobuf::Any& AnyMessage) {
+std::vector<google::protobuf::Any> MessageEventsCache::triggerMessageHandlers(const Service::Sender sender,
+                                                                              const google::protobuf::Any& AnyMessage) {
     std::shared_lock sharedLock{sharedMutex};
+    std::vector<google::protobuf::Any> responses{};
     std::for_each(std::begin(events), std::end(events), [&](auto& event) {
         if (event.second->validateMessage(AnyMessage)) {
-            event.second->handleReceivedMessage(AnyMessage);
+            auto response = event.second->handleReceivedMessage(sender, AnyMessage);
+            if (response.has_value()) {
+                responses.emplace_back(*response);
+            }
         }
     });
+    return responses;
 }
 
 size_t MessageEventsCache::size() const {

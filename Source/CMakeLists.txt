@@ -1,3 +1,6 @@
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
+
 protobuf_generate_cpp(PROTO_WATCHDOG_SERVICE_SRC PROTO_WATCHDOG_SERVICE_HEADERS
     ${WatchdogServiceProtocolDirectory}/WatchdogService.proto
 )

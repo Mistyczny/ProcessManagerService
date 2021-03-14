@@ -1,4 +1,5 @@
-project(CommunicationProtocols)
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
 
 include(ExternalProject)
 include_directories(${PROTOBUF_INCLUDE_DIR})

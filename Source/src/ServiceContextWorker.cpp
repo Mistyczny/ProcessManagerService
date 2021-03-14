@@ -1,9 +1,9 @@
 #include "ServiceContextWorker.hpp"
 #include "Logging.hpp"
+#include "ServiceCommon.hpp"
+#include "ServiceGlobals.hpp"
 #include "ServiceModule.pb.h"
 #include <algorithm>
-#include <boost/bind.hpp>
-#include <iostream>
 
 namespace Service {
 
@@ -35,26 +35,56 @@ void ContextWorker::runAll() {
 
 void ContextWorker::startRead() {
     if (socket) {
-        socket->async_receive(boost::asio::buffer(messageBuffer), [this](const boost::system::error_code& error, std::size_t bytesRead) {
-            if (error) {
-                this->handleReadError(error);
-            } else {
-                std::string receivedMessageBuffer{};
-                receivedMessageBuffer.reserve(bytesRead);
-                std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
-                this->startRead();
-
-                ServiceModule::Message receivedMessage{};
-                if (receivedMessage.ParseFromString(receivedMessageBuffer)) {
-                    const auto operationCode = receivedMessage.header().operationcode();
-                    if (operationCode == ServiceModule::ModuleRequest) {
-                        messageEventsCache.triggerMessageHandlers(receivedMessage.request().request());
-                    }
+        socket->async_receive_from(
+            boost::asio::buffer(messageBuffer), remoteEndpoint, [this](const boost::system::error_code& error, std::size_t bytesRead) {
+                if (error) {
+                    this->handleReadError(error);
                 } else {
-                    Log::error("Failed to parse message from string");
+                    // Copy received message to local message buffer
+                    std::string receivedMessageBuffer{};
+                    receivedMessageBuffer.reserve(bytesRead);
+                    std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
+
+                    // Create sender structure
+                    Sender sender{};
+                    sender.senderEndpoint = remoteEndpoint;
+
+                    // Now we have local copies of all required things, we can start listening again
+                    this->startRead();
+
+                    ServiceModule::Message receivedMessage{};
+                    if (receivedMessage.ParseFromString(receivedMessageBuffer)) {
+                        sender.senderIdentifier = receivedMessage.header().senderidentifier();
+                        const auto operationCode = receivedMessage.header().operationcode();
+                        if (operationCode == ServiceModule::ModuleRequest) {
+                            auto responses = messageEventsCache.triggerMessageHandlers(sender, receivedMessage.request().request());
+
+                            std::for_each(std::begin(responses), std::end(responses), [&](auto& response) {
+                                ServiceModule::Message responseMessage{};
+                                auto* responseHeader = new ServiceModule::Header{};
+                                responseHeader->set_senderidentifier(Service::Globals::serviceIdentifier);
+                                responseHeader->set_operationcode(ServiceModule::OperationCode::ServiceResponse);
+                                responseHeader->set_transactioncode(receivedMessage.header().transactioncode());
+                                responseMessage.set_allocated_header(responseHeader);
+                                auto* responseRequest = new ServiceModule::Request{};
+                                responseRequest->CopyFrom(response);
+                                std::string message{};
+                                responseMessage.SerializeToString(&message);
+                                this->socket->async_send_to(boost::asio::buffer(message), sender.senderEndpoint,
+                                                            [](const boost::system::error_code& error, std::size_t bytesRead) {
+                                                                if (error) {
+                                                                    std::cout << "SENDING ERROR" << std::endl;
+                                                                } else {
+                                                                    std::cout << "SENDING SUCCESS" << std::endl;
+                                                                }
+                                                            });
+                            });
+                        }
+                    } else {
+                        Log::error("Failed to parse message from string");
+                    }
                 }
-            }
-        });
+            });
     }
 }
 

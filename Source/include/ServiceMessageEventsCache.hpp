@@ -17,7 +17,7 @@ public:
     ~MessageEventsCache() = default;
 
     uint32_t addMessageEvent(std::unique_ptr<EventInterface> newEvent);
-    void triggerMessageHandlers(const google::protobuf::Any& any);
+    std::vector<google::protobuf::Any> triggerMessageHandlers(const Service::Sender sender, const google::protobuf::Any& any);
 
     size_t size() const;
 };

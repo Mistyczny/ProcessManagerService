@@ -1,3 +1,6 @@
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
+
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project(process-manager-service)
 enable_testing()
