@@ -1,10 +1,10 @@
 #include "EventManager.hpp"
 
-bool EventManager::initialize(std::multimap<uint32_t, std::unique_ptr<EventInterface>>& eventsMap) noexcept {
+bool EventManager::initialize(Service::MessageEventsCache& messageEventsCache) noexcept {
     bool eventManagerInitialized{true};
     if (!eventManager) {
         try {
-            eventManager = new EventManager(eventsMap);
+            eventManager = new EventManager(messageEventsCache);
         } catch (std::bad_alloc& allocationError) {
             eventManagerInitialized = false;
         }
@@ -12,7 +12,7 @@ bool EventManager::initialize(std::multimap<uint32_t, std::unique_ptr<EventInter
     return eventManagerInitialized;
 }
 
-EventManager::EventManager(std::multimap<uint32_t, std::unique_ptr<EventInterface>>& eventsMap) : eventsMap{eventsMap} {}
+EventManager::EventManager(Service::MessageEventsCache& messageEventsCache) : messageEventsCache{messageEventsCache} {}
 
 EventManager::~EventManager() {
     if (eventManager) {
@@ -21,7 +21,15 @@ EventManager::~EventManager() {
 }
 EventManager* EventManager::getEventManager() { return eventManager; }
 
-void EventManager::registerNewEventHandler(uint32_t key, std::unique_ptr<EventInterface> handler) {
-    auto eventManager = getEventManager();
-    eventManager->eventsMap.emplace(key, std::move(handler));
+std::optional<uint32_t> EventManager::registerNewEventHandler(uint32_t key, std::unique_ptr<EventInterface> eventHandler) {
+    std::optional<uint32_t> eventID{std::nullopt};
+    if (eventHandler) {
+        auto eventManager = getEventManager();
+        try {
+            eventID = eventManager->messageEventsCache.addMessageEvent(std::move(eventHandler));
+        } catch (std::exception& ex) {
+            Log::error("Failed to add message event to the cache with error" + std::string{ex.what()});
+        }
+    }
+    return eventID;
 }

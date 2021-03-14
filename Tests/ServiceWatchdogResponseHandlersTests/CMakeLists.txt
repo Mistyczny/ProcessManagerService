@@ -1,5 +1,3 @@
-project(ServiceWatchdogResponseHandlersTests)
-
 set(ServiceWatchdogResponseHandlersSources
     ${CMAKE_SOURCE_DIR}/Source/src/ServiceWatchdogResponseHandlers.cpp
     ${CMAKE_SOURCE_DIR}/Source/src/ServiceWatchdogConnectionState.cpp

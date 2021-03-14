@@ -1,14 +1,14 @@
 #include "ServiceContextWorker.hpp"
 #include "Logging.hpp"
 #include "ServiceModule.pb.h"
+#include <algorithm>
 #include <boost/bind.hpp>
 #include <iostream>
 
 namespace Service {
 
-ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads,
-                             std::multimap<uint32_t, std::unique_ptr<EventInterface>>& serviceEventsMap)
-    : ioContextThreads{ioContextThreads}, serviceEventsMap{serviceEventsMap} {
+ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads, MessageEventsCache& messageEventsCache)
+    : ioContextThreads{ioContextThreads}, messageEventsCache{messageEventsCache} {
     boost::asio::socket_base::reuse_address option(true);
     auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 12234);
     socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
@@ -19,7 +19,7 @@ ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads,
 
 ContextWorker::ContextWorker(ContextWorker&& other) noexcept
     : ioContextThreads(std::move(other).ioContextThreads),
-      serviceEventsMap(std::move(other).serviceEventsMap), socket{std::move(other.socket)} {}
+      messageEventsCache(std::move(other).messageEventsCache), socket{std::move(other.socket)} {}
 
 ContextWorker& ContextWorker::operator=(ContextWorker&& other) noexcept {
     this->socket = std::move(other.socket);
@@ -44,13 +44,11 @@ void ContextWorker::startRead() {
                 std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
                 this->startRead();
 
-                ServiceModule::Request receivedRequest{};
-                if (receivedRequest.ParseFromString(receivedMessageBuffer)) {
-                    const auto operationCode = receivedRequest.header().operationcode();
-                    auto iter = serviceEventsMap.equal_range(operationCode);
-                    for (auto& eventHandler = iter.first; eventHandler != iter.second; eventHandler++) {
-                        // Run all registered handlers
-                        eventHandler->second->handleReceivedMessage(receivedMessageBuffer);
+                ServiceModule::Message receivedMessage{};
+                if (receivedMessage.ParseFromString(receivedMessageBuffer)) {
+                    const auto operationCode = receivedMessage.header().operationcode();
+                    if (operationCode == ServiceModule::ModuleRequest) {
+                        messageEventsCache.triggerMessageHandlers(receivedMessage.request().request());
                     }
                 } else {
                     Log::error("Failed to parse message from string");

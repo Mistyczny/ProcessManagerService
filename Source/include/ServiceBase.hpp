@@ -1,6 +1,7 @@
 #pragma once
 #include "Event.hpp"
 #include "ServiceContextWorker.hpp"
+#include "ServiceMessageEventsCache.hpp"
 #include "ServiceModulesServer.hpp"
 #include "ServiceTask.hpp"
 #include "ServiceWatchdogConnection.hpp"
@@ -14,7 +15,7 @@ namespace Service {
 class Base {
 private:
     std::vector<std::thread> ioContextThreads{};
-    std::multimap<uint32_t, std::unique_ptr<EventInterface>> serviceEventsMap;
+    MessageEventsCache messageEventsCache{};
     Task task{};
     std::vector<ContextWorker> contextWorkers;
     WatchdogConnectionState watchdogConnectionState{};

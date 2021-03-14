@@ -1,5 +1,7 @@
 #pragma once
 #include "Event.hpp"
+#include "ServiceMessageEventsCache.hpp"
+#include "ServiceModule.pb.h"
 #include <array>
 #include <boost/asio.hpp>
 #include <cstdint>
@@ -10,19 +12,16 @@ namespace Service {
 
 class ContextWorker {
 private:
-    uint32_t servedClientsCount{0};
     boost::asio::io_context ioContext{};
     std::vector<std::thread>& ioContextThreads;
-    std::multimap<uint32_t, std::unique_ptr<EventInterface>>& serviceEventsMap;
+    MessageEventsCache& messageEventsCache;
     std::unique_ptr<boost::asio::ip::udp::socket> socket{nullptr};
-    boost::asio::ip::udp::endpoint clientEndpoint{};
-    std::array<char, 1024> buffer{};
     std::string messageBuffer{};
 
     void handleReadError(const boost::system::error_code& error);
 
 public:
-    explicit ContextWorker(std::vector<std::thread>& ioContextThreads, std::multimap<uint32_t, std::unique_ptr<EventInterface>>&);
+    explicit ContextWorker(std::vector<std::thread>& ioContextThreads, MessageEventsCache& messageEventsCache);
     ContextWorker(const ContextWorker& other) = delete;
     ContextWorker(ContextWorker&& other) noexcept;
     ContextWorker& operator=(const ContextWorker& other) = delete;

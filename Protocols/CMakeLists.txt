@@ -35,7 +35,7 @@ add_dependencies(ProtoWatchdogServiceLibrary WatchdogServiceProtocolDownload)
 # Service-Module communication protocol download
 #
 
-set(ServiceModuleProtocolVersion 1.1)
+set(ServiceModuleProtocolVersion 1.3)
 set(ServiceModuleProtocolPackage ServiceModuleProtocol_${ServiceModuleProtocolVersion}.tar)
 ExternalProject_Add(ServiceModuleProtocolDownload
     PREFIX
