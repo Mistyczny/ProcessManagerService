@@ -1,20 +1,23 @@
 #pragma once
 #include "Event.hpp"
+#include "ServiceMessageEventsCache.hpp"
 #include <map>
+#include <optional>
 
 class EventManager {
 private:
     static inline EventManager* eventManager{nullptr};
-    std::multimap<uint32_t, std::unique_ptr<EventInterface>>& eventsMap;
+    Service::MessageEventsCache& messageEventsCache;
 
 public:
-    explicit EventManager(std::multimap<uint32_t, std::unique_ptr<EventInterface>>& eventsMap);
+    explicit EventManager(Service::MessageEventsCache& messageEventsCache);
     EventManager(const EventManager&) = delete;
     EventManager& operator=(const EventManager&) = delete;
     virtual ~EventManager();
-    static bool initialize(std::multimap<uint32_t, std::unique_ptr<EventInterface>>&) noexcept;
+    static bool initialize(Service::MessageEventsCache& messageEventsCache) noexcept;
 
     static EventManager* getEventManager();
 
-    static void registerNewEventHandler(uint32_t, std::unique_ptr<EventInterface>);
+    ///
+    static std::optional<uint32_t> registerNewEventHandler(uint32_t id, std::unique_ptr<EventInterface>);
 };
