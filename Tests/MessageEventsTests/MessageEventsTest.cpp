@@ -1,6 +1,7 @@
 #include "Event.hpp"
 #include "EventManager.hpp"
 #include "Example.pb.h"
+#include "ServiceCommon.hpp"
 #include <algorithm>
 #include <catch2/catch.hpp>
 #include <iostream>
@@ -9,23 +10,28 @@ class SimpleUpdateMessageClass {
 private:
 public:
     bool validate(const google::protobuf::Any& any) { return any.Is<ExamplePrototypes::CoordinatesUpdate>(); }
-    void run(const google::protobuf::Any& any) { std::cout << "DABI ABU" << std::endl; }
+    std::optional<google::protobuf::Any> run(const Service::Sender, const google::protobuf::Any& any) {
+        std::cout << "DABI ABU" << std::endl;
+        return {};
+    }
 };
 
 class SimpleGetMessageClass {
 private:
 public:
     bool validate(const google::protobuf::Any& any) { return any.Is<ExamplePrototypes::CoordinatesGet>(); }
-    void run(const google::protobuf::Any& any) {
+    std::optional<google::protobuf::Any> run(const Service::Sender, const google::protobuf::Any& any) {
         ExamplePrototypes::CoordinatesGet coordinatesGet{};
         any.UnpackTo(&coordinatesGet);
         std::cout << coordinatesGet.identifier() << std::endl;
         std::cout << "ABU DABI" << std::endl;
+        return {};
     }
 };
 
 TEST_CASE("Testing message events functionality", "") {
     std::vector<std::unique_ptr<EventInterface>> events;
+    const Service::Sender sender{};
 
     ExamplePrototypes::CoordinatesUpdate updateMessage{};
     google::protobuf::Any anyUpdateMessage{};
@@ -35,7 +41,7 @@ TEST_CASE("Testing message events functionality", "") {
     std::unique_ptr<EventInterface> updateMessageEvent =
         std::make_unique<MessageEvent<std::shared_ptr<SimpleUpdateMessageClass>>>(simpleUpdateEventClass);
     std::cout << updateMessageEvent->validateMessage(anyUpdateMessage) << std::endl;
-    updateMessageEvent->handleReceivedMessage(anyUpdateMessage);
+    updateMessageEvent->handleReceivedMessage(sender, anyUpdateMessage);
 
     ExamplePrototypes::CoordinatesGet getMessage{};
     getMessage.set_identifier(17);
@@ -46,14 +52,14 @@ TEST_CASE("Testing message events functionality", "") {
     std::unique_ptr<EventInterface> getMessageEvent =
         std::make_unique<MessageEvent<std::shared_ptr<SimpleGetMessageClass>>>(simpleEventClass);
     std::cout << getMessageEvent->validateMessage(anyGetMessage) << std::endl;
-    getMessageEvent->handleReceivedMessage(anyGetMessage);
+    getMessageEvent->handleReceivedMessage(sender, anyGetMessage);
 
     events.push_back(std::move(updateMessageEvent));
     events.push_back(std::move(getMessageEvent));
 
     std::for_each(std::begin(events), std::end(events), [&](auto& event) {
         if (event->validateMessage(anyGetMessage)) {
-            event->handleReceivedMessage(anyGetMessage);
+            event->handleReceivedMessage(sender, anyGetMessage);
         } else {
             std::cout << "VALIDATION FAILURE" << std::endl;
         }

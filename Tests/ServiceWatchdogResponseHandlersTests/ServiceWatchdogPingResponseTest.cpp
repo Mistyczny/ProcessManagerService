@@ -6,7 +6,8 @@
 
 TEST_CASE("Testing service ping functionality", "") {
     uint32_t sequenceCode{};
-    Service::WatchdogPingResponseHandler watchdogPingResponseHandler{sequenceCode};
+    auto startPingTimer = std::bind([&]() { std::cout << "TIMERS" << std::endl; });
+    Service::WatchdogPingResponseHandler watchdogPingResponseHandler{sequenceCode, std::move(startPingTimer)};
 
     SECTION("Parsing invalid message") {
         std::string invalidMessage{"abcd"}; // Just random string
