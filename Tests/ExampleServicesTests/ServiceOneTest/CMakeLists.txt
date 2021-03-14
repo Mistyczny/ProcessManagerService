@@ -1,4 +1,5 @@
-project(ServiceOneTest)
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
 
 set(SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ServiceOneTestMain.cpp)
 

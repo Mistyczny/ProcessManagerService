@@ -1,3 +1,6 @@
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
+
 set(ServiceWatchdogResponseHandlersSources
     ${CMAKE_SOURCE_DIR}/Source/src/ServiceWatchdogResponseHandlers.cpp
     ${CMAKE_SOURCE_DIR}/Source/src/ServiceWatchdogConnectionState.cpp

@@ -1,5 +1,6 @@
 #pragma once
 #include "Logging.hpp"
+#include "ServiceCommon.hpp"
 #include <chrono>
 #include <functional>
 #include <google/protobuf/any.pb.h>
@@ -14,7 +15,7 @@ public:
     virtual ~EventInterface() = default;
 
     virtual bool validateMessage(const google::protobuf::Any& any) = 0;
-    virtual void handleReceivedMessage(const google::protobuf::Any& any) = 0;
+    virtual std::optional<google::protobuf::Any> handleReceivedMessage(const Service::Sender sender, const google::protobuf::Any& any) = 0;
 };
 
 template <class T, std::enable_if_t<!std::is_pointer_v<T>, bool> = true> class MessageEvent : public EventInterface {
@@ -34,5 +35,7 @@ public:
         return messageValidated;
     }
 
-    void handleReceivedMessage(const google::protobuf::Any& any) override { this->callback->run(any); }
+    std::optional<google::protobuf::Any> handleReceivedMessage(const Service::Sender sender, const google::protobuf::Any& any) override {
+        return this->callback->run(sender, any);
+    }
 };

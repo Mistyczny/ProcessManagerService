@@ -32,6 +32,8 @@ public:
     void readAll();
 
     void initialize();
+
+    int runServiceTask();
 };
 
 } // namespace Service

@@ -1,3 +1,6 @@
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
+
 protobuf_generate_cpp(EXAMPLE_PROTO_SRC EXAMPLE_PROTO_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/Example.proto
 )

@@ -49,4 +49,6 @@ void Base::readAll() { modulesServer.startReadingAll(); }
 
 void Base::initialize() { EventManager::initialize(this->messageEventsCache); }
 
+int Base::runServiceTask() { return this->task.run(); }
+
 } // namespace Service

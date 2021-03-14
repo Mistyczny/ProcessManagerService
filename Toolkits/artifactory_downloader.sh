@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
+
 set -e
 set -u
 

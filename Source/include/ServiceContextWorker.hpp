@@ -13,10 +13,12 @@ namespace Service {
 class ContextWorker {
 private:
     boost::asio::io_context ioContext{};
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_worker{boost::asio::make_work_guard(ioContext)};
     std::vector<std::thread>& ioContextThreads;
     MessageEventsCache& messageEventsCache;
     std::unique_ptr<boost::asio::ip::udp::socket> socket{nullptr};
     std::string messageBuffer{};
+    boost::asio::ip::udp::endpoint remoteEndpoint{};
 
     void handleReadError(const boost::system::error_code& error);
 

@@ -51,9 +51,10 @@ public:
 class WatchdogPingResponseHandler : public WatchdogResponseHandler {
 protected:
     WatchdogService::PingResponseData pingResponseData{};
+    std::function<void()> pingTimerSet;
 
 public:
-    explicit WatchdogPingResponseHandler(uint32_t& sequenceCode);
+    explicit WatchdogPingResponseHandler(uint32_t& sequenceCode, std::function<void()> pingTimerSet);
     ~WatchdogPingResponseHandler() override = default;
 
     /// @param Received message to handle as string

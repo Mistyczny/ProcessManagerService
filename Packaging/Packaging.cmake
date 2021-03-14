@@ -1,3 +1,6 @@
+# Copyright 2021, Kacper Waśniowski
+# All rights reserved.
+
 set(CPACK_DEBIAN_PACKAGE_NAME process-manager-service)
 set(CPACK_GENERATOR "DEB;RPM")
 set(CPACK_PACKAGE_VERSION_MAJOR 1)

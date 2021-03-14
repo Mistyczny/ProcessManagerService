@@ -90,7 +90,7 @@ void WatchdogPingResponseHandler::handleResponse(std::string& receivedResponse) 
         throw WatchdogResponseHandlerException{WatchdogResponseHandlerException::ErrorCode::FailedToParse};
     } else {
         if (this->sequenceCode == pingResponseData.sequencecode()) {
-            // all ok, restart timer
+            this->pingTimerSet();
         } else {
             Log::info("Received ping with invalid sequence code");
             throw WatchdogResponseHandlerException(WatchdogResponseHandlerException::ErrorCode::ResendPingRequest);
@@ -98,7 +98,8 @@ void WatchdogPingResponseHandler::handleResponse(std::string& receivedResponse) 
     }
 }
 
-WatchdogPingResponseHandler::WatchdogPingResponseHandler(uint32_t& sequenceCode) : WatchdogResponseHandler(sequenceCode) {}
+WatchdogPingResponseHandler::WatchdogPingResponseHandler(uint32_t& sequenceCode, std::function<void()> pingTimerSet)
+    : WatchdogResponseHandler(sequenceCode), pingTimerSet{std::move(pingTimerSet)} {}
 
 WatchdogReconnectResponseHandler::WatchdogReconnectResponseHandler(uint32_t& sequenceCode, WatchdogConnectionState& watchdogConnectionState)
     : WatchdogResponseHandler{sequenceCode}, watchdogConnectionState{watchdogConnectionState} {}
