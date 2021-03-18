@@ -68,3 +68,15 @@ target_compile_features(Service PRIVATE cxx_nullptr)
 target_compile_features(Service PRIVATE cxx_override)
 
 add_library(Service::Service ALIAS Service)
+
+include(GNUInstallDirs)
+
+install(TARGETS Service
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            COMPONENT ${CMAKE_PROJECT_NAME}_RunTime
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            COMPONENT ${CMAKE_PROJECT_NAME}_RunTime
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            COMPONENT ${CMAKE_PROJECT_NAME}_Development
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
