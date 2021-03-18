@@ -64,4 +64,9 @@ TEST_CASE("Testing message events functionality", "") {
             std::cout << "VALIDATION FAILURE" << std::endl;
         }
     });
+
+    google::protobuf::Any anyMsg{};
+    anyMsg.PackFrom(getMessage);
+    anyMsg.type_url();
+    std::cout << "CHECK IF IS: " << anyGetMessage.type_url() << std::endl;
 }
