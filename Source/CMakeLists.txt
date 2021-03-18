@@ -45,6 +45,8 @@ set_target_properties(Service PROPERTIES PUBLIC_HEADER "${SERVICE_PUBLIC_HEADERS
 target_link_libraries(Service
         PUBLIC
     pthread
+    mongocxx
+    bsoncxx
     spdlog
     ${PROTOBUF_LIBRARY}
 )
