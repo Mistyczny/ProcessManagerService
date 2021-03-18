@@ -20,6 +20,10 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceWatchdogConnectionState.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceGlobals.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceMessageEventsCache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceSubscriptionEventsCache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ServiceModulesCache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MongoDbEnvironment.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MongoModulesCollection.cpp
     ${PROTO_WATCHDOG_SERVICE_SRC}
     ${PROTO_SERVICE_MODULE_SRC}
 )
@@ -41,6 +45,8 @@ set_target_properties(Service PROPERTIES PUBLIC_HEADER "${SERVICE_PUBLIC_HEADERS
 target_link_libraries(Service
         PUBLIC
     pthread
+    mongocxx
+    bsoncxx
     spdlog
     ${PROTOBUF_LIBRARY}
 )
@@ -49,6 +55,7 @@ target_include_directories(Service
         PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Source>"
+    "$<BUILD_INTERFACE:${MongoCxxIncludes}>"
 )
 
 target_include_directories(Service

@@ -1,5 +1,7 @@
 #include "ServiceContextWorker.hpp"
 #include "Logging.hpp"
+#include "MongoDbEnvironment.hpp"
+#include "MongoModulesCollection.hpp"
 #include "ServiceCommon.hpp"
 #include "ServiceGlobals.hpp"
 #include "ServiceModule.pb.h"
@@ -7,8 +9,10 @@
 
 namespace Service {
 
-ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads, MessageEventsCache& messageEventsCache)
-    : ioContextThreads{ioContextThreads}, messageEventsCache{messageEventsCache} {
+ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads, ModulesCache& modulesCache, MessageEventsCache& messageEventsCache,
+                             SubscriptionEventsCache& subscriptionEventsCache)
+    : ioContextThreads{ioContextThreads}, modulesCache{modulesCache}, messageEventsCache{messageEventsCache}, subscriptionEventsCache{
+                                                                                                                  subscriptionEventsCache} {
     boost::asio::socket_base::reuse_address option(true);
     auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 12234);
     socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
@@ -18,8 +22,9 @@ ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads, Message
 }
 
 ContextWorker::ContextWorker(ContextWorker&& other) noexcept
-    : ioContextThreads(std::move(other).ioContextThreads),
-      messageEventsCache(std::move(other).messageEventsCache), socket{std::move(other.socket)} {}
+    : ioContextThreads(std::move(other).ioContextThreads), modulesCache{std::move(other).modulesCache},
+      messageEventsCache(std::move(other).messageEventsCache),
+      subscriptionEventsCache{std::move(other).subscriptionEventsCache}, socket{std::move(other.socket)} {}
 
 ContextWorker& ContextWorker::operator=(ContextWorker&& other) noexcept {
     this->socket = std::move(other.socket);
@@ -79,12 +84,48 @@ void ContextWorker::startRead() {
                                                                 }
                                                             });
                             });
+                            this->handleSubscriptions(receivedMessage.request().request());
                         }
                     } else {
                         Log::error("Failed to parse message from string");
                     }
                 }
             });
+    }
+}
+
+void ContextWorker::handleSubscriptions(google::protobuf::Any anyMessage) {
+    auto responses = this->subscriptionEventsCache.triggerMessageHandlers(anyMessage);
+    if (!responses.empty()) {
+        auto modulesCollectionEntry = Mongo::DbEnvironment::getInstance()->getClient();
+        Mongo::ModulesCollection modulesCollection{*modulesCollectionEntry, "Modules"};
+
+        std::for_each(std::begin(responses), std::end(responses), [&](auto& response) {
+            auto destinationModule = modulesCollection.getModule(response.first);
+            if (destinationModule.has_value()) {
+                ServiceModule::Message responseMessage{};
+                auto* responseHeader = new ServiceModule::Header{};
+                responseHeader->set_senderidentifier(Service::Globals::serviceIdentifier);
+                responseHeader->set_operationcode(ServiceModule::OperationCode::ServiceRequest);
+                responseHeader->set_transactioncode(19);
+                responseMessage.set_allocated_header(responseHeader);
+                auto* responseRequest = new ServiceModule::Request{};
+                responseRequest->CopyFrom(response.second);
+                std::string message{};
+                responseMessage.SerializeToString(&message);
+
+                boost::asio::ip::address address = boost::asio::ip::address::from_string(destinationModule->ipAddress);
+                boost::asio::ip::udp::endpoint clientEndpoint{address, destinationModule->port};
+                this->socket->async_send_to(boost::asio::buffer(message), clientEndpoint,
+                                            [](const boost::system::error_code& error, std::size_t bytesRead) {
+                                                if (error) {
+                                                    std::cout << "SENDING ERROR" << std::endl;
+                                                } else {
+                                                    std::cout << "SENDING SUCCESS" << std::endl;
+                                                }
+                                            });
+            }
+        });
     }
 }
 
