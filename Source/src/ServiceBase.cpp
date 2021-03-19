@@ -1,10 +1,12 @@
 #include "ServiceBase.hpp"
 #include "EventManager.hpp"
+#include "MongoDbEnvironment.hpp"
 #include <thread>
 
 namespace Service {
 
 Base::Base() : modulesServer{contextWorkers} {
+    Mongo::DbEnvironment::initialize();
     for (int i = 0; i < 1; i++) {
         contextWorkers.emplace_back(ioContextThreads, modulesCache, messageEventsCache, subscriptionEventsCache);
     }
