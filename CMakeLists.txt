@@ -34,4 +34,6 @@ add_subdirectory(Protocols)
 add_subdirectory(Source)
 add_subdirectory(Tests)
 
+configure_file(Doxyfile.in Doxyfile)
+
 include(CPack)
