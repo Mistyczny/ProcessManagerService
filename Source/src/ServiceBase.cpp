@@ -1,6 +1,8 @@
 #include "ServiceBase.hpp"
 #include "EventManager.hpp"
 #include "MongoDbEnvironment.hpp"
+#include "Service.hpp"
+#include "ServiceGlobals.hpp"
 #include <thread>
 
 namespace Service {
@@ -51,6 +53,16 @@ void Base::readAll() { modulesServer.startReadingAll(); }
 
 void Base::initialize() { EventManager::initialize(this->messageEventsCache); }
 
-int Base::runServiceTask() { return this->task.run(); }
+int Base::runServiceTask() {
+    int taskReturn = this->task.run();
+    if (taskReturn == ReturnCodes::RUN_FOREVER) {
+        std::for_each(std::begin(ioContextThreads), std::end(ioContextThreads), [](auto& ioContextThread) {
+            if (ioContextThread.joinable()) {
+                ioContextThread.join();
+            }
+        });
+    }
+    return taskReturn;
+}
 
 } // namespace Service

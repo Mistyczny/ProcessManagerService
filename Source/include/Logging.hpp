@@ -13,8 +13,8 @@ private:
 public:
     enum class LogLevel : uint8_t { TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL };
 
-    template <typename T> Log(T moduleIdentifier, LogLevel logLevel) {
-        logger = spdlog::basic_logger_mt("file_logger", std::string{"/home/kacper/Logs/" + std::string(moduleIdentifier) + ".log"});
+    template <typename T> Log(T identifier, LogLevel logLevel) {
+        logger = spdlog::basic_logger_mt("file_logger", std::string{"/home/kacper/Logs/" + std::string(identifier) + ".log"});
         logger->set_pattern("[%H:%M:%S %z] [thread %t] %v");
         logger->set_level(spdlog::level::trace);
         spdlog::flush_every(std::chrono::seconds(3));

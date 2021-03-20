@@ -49,6 +49,7 @@ target_link_libraries(Service
     bsoncxx
     spdlog
     ${PROTOBUF_LIBRARY}
+    ${Boost_LIBRARIES}
 )
 
 target_include_directories(Service
