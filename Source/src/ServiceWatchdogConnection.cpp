@@ -25,8 +25,8 @@ void WatchdogConnection::onTimerExpiration() { this->sendPingRequest(); }
 
 std::unique_ptr<WatchdogResponseHandler> WatchdogConnection::getWatchdogResponseHandler(const WatchdogService::Operation& operationCode) {
     std::unique_ptr<WatchdogResponseHandler> watchdogResponseHandler{nullptr};
-    std::cout << "RECEIVED OP CODE: " << operationCode << std::endl;
     auto startPingTimer = std::bind([&]() { this->setTimerExpiration(3000); });
+    std::cout << "RECEIVED OP CODE: " << operationCode << std::endl;
     switch (operationCode) {
     case WatchdogService::Operation::ConnectResponse:
         watchdogResponseHandler = std::make_unique<WatchdogConnectResponseHandler>(this->sequenceCode, this->watchdogConnectionState);

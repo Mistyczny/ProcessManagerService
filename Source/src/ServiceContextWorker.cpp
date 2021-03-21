@@ -3,6 +3,7 @@
 #include "MongoDbEnvironment.hpp"
 #include "MongoModulesCollection.hpp"
 #include "ServiceCommon.hpp"
+#include "ServiceConfiguration.hpp"
 #include "ServiceGlobals.hpp"
 #include "ServiceModule.pb.h"
 #include <algorithm>
@@ -14,7 +15,8 @@ ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads, Modules
     : ioContextThreads{ioContextThreads}, modulesCache{modulesCache}, messageEventsCache{messageEventsCache}, subscriptionEventsCache{
                                                                                                                   subscriptionEventsCache} {
     boost::asio::socket_base::reuse_address option(true);
-    auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 12234);
+    auto& port = Configuration::getInstance().getServerConfiguration().listeningPort;
+    auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port);
     socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
     socket->open(endpoint.protocol());
     socket->set_option(option);
@@ -50,6 +52,9 @@ void ContextWorker::startRead() {
                     receivedMessageBuffer.reserve(bytesRead);
                     std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
 
+                    Log::info("Message received");
+                    std::cout << "MESSAGE!" << std::endl;
+
                     // Create sender structure
                     Sender sender{};
                     sender.senderEndpoint = remoteEndpoint;
@@ -59,9 +64,13 @@ void ContextWorker::startRead() {
 
                     ServiceModule::Message receivedMessage{};
                     if (receivedMessage.ParseFromString(receivedMessageBuffer)) {
+                        Log::info("Message received is valid ServiceModule::Message");
+                        std::cout << "MESSAGE IS ServiceModule::Message!" << std::endl;
                         sender.senderIdentifier = receivedMessage.header().senderidentifier();
                         const auto operationCode = receivedMessage.header().operationcode();
                         if (operationCode == ServiceModule::ModuleRequest) {
+                            Log::info("Message received is module request");
+                            std::cout << "Message received is module request!" << std::endl;
                             auto responses = messageEventsCache.triggerMessageHandlers(sender, receivedMessage.request().request());
 
                             std::for_each(std::begin(responses), std::end(responses), [&](auto& response) {
@@ -85,6 +94,9 @@ void ContextWorker::startRead() {
                                                             });
                             });
                             this->handleSubscriptions(receivedMessage.request().request());
+                        } else {
+                            Log::info("Message received is not module request: " + std::to_string(operationCode));
+                            std::cout << "Message received is not module request: " << operationCode << std::endl;
                         }
                     } else {
                         Log::error("Failed to parse message from string");

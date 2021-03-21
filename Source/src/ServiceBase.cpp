@@ -2,6 +2,8 @@
 #include "EventManager.hpp"
 #include "MongoDbEnvironment.hpp"
 #include "Service.hpp"
+#include "ServiceConfiguration.hpp"
+#include "ServiceConfigurationReader.hpp"
 #include "ServiceGlobals.hpp"
 #include <thread>
 
@@ -63,6 +65,11 @@ int Base::runServiceTask() {
         });
     }
     return taskReturn;
+}
+
+bool Base::readConfiguration() {
+    ConfigurationReader configurationReader{Configuration::getInstance()};
+    return configurationReader.readConfiguration(Globals::serviceIdentifier);
 }
 
 } // namespace Service

@@ -30,6 +30,7 @@ public:
     Base();
     virtual ~Base();
 
+    bool readConfiguration();
     bool connectToWatchdog();
     bool waitForConnectResponse();
     void joinAll();
