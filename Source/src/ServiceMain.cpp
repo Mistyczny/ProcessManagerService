@@ -8,6 +8,7 @@ int main() {
     if (!serviceBase.readConfiguration()) {
         returnCode = -1;
     } else {
+        serviceBase.initializeSockets();
         serviceBase.readAll();
         serviceBase.joinAll();
         if (!serviceBase.connectToWatchdog()) {

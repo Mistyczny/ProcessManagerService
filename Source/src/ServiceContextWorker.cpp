@@ -16,11 +16,17 @@ ContextWorker::ContextWorker(std::vector<std::thread>& ioContextThreads, Modules
                                                                                                                   subscriptionEventsCache} {
     boost::asio::socket_base::reuse_address option(true);
     auto& port = Configuration::getInstance().getServerConfiguration().listeningPort;
-    auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port);
-    socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
-    socket->open(endpoint.protocol());
-    socket->set_option(option);
-    socket->bind(endpoint);
+    try {
+        std::cout << "Listening on port: " << port << std::endl;
+        auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port);
+        socket = std::make_unique<boost::asio::ip::udp::socket>(ioContext);
+        socket->open(endpoint.protocol());
+        socket->set_option(option);
+        socket->bind(endpoint);
+        messageBuffer.resize(1024);
+    } catch (std::exception& ex) {
+        std::cout << "CAUGHT ex: " << ex.what() << std::endl;
+    }
 }
 
 ContextWorker::ContextWorker(ContextWorker&& other) noexcept
@@ -36,12 +42,18 @@ ContextWorker& ContextWorker::operator=(ContextWorker&& other) noexcept {
 
 void ContextWorker::runAll() {
     for (auto threadNr = 0; threadNr < 5; threadNr++) {
-        ioContextThreads.emplace_back([&]() { ioContext.run(); });
+        ioContextThreads.emplace_back([&]() {
+            std::cout << "START IOCONTEXT!" << std::endl;
+            ioContext.run();
+            std::cout << "POST START IOCONTEXT!" << std::endl;
+        });
     }
 }
 
 void ContextWorker::startRead() {
+    std::cout << "START READING!" << std::endl;
     if (socket) {
+        std::cout << "SOCKET EXISTS READING!" << std::endl;
         socket->async_receive_from(
             boost::asio::buffer(messageBuffer), remoteEndpoint, [this](const boost::system::error_code& error, std::size_t bytesRead) {
                 if (error) {
@@ -53,7 +65,7 @@ void ContextWorker::startRead() {
                     std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
 
                     Log::info("Message received");
-                    std::cout << "MESSAGE!" << std::endl;
+                    std::cout << "MESSAGE SIZE: " << bytesRead << std::endl;
 
                     // Create sender structure
                     Sender sender{};

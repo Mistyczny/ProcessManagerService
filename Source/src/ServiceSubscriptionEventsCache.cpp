@@ -68,4 +68,12 @@ void SubscriptionEventsCache::addSubscriber(Types::ModuleIdentifier moduleIdenti
     });
 }
 
+void SubscriptionEventsCache::addSubscriber(Types::ModuleIdentifier identifier, uint32_t& subscribeEventID) {
+    std::unique_lock uniqueLock{sharedMutex};
+    auto iter = std::find_if(std::begin(events), std::end(events), [&](auto& event) { return event.id == subscribeEventID; });
+    if (iter != std::end(events)) {
+        iter->subscribers.emplace_back(identifier);
+    }
+}
+
 } // namespace Service

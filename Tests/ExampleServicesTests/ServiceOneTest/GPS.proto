@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package GPS;
+
+message CoordinatesUpdateRequest {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message CoordinatesUpdateResponse {
+  enum ResponseCode {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
+  uint32 identifier = 1;
+  ResponseCode responseCode = 2;
+}
+
+message CoordinatesGetRequest {
+  uint32 identifier = 1;
+}
+
+message CoordinatesGetResponse {
+  uint32 identifier = 1;
+  uint32 x = 2;
+  int32 y = 3;
+}
+
+message SubscribeIdentifierRequest {
+  uint32 identifier = 1;
+}
+
+message SubscribeIdentifierResponse {
+  enum ResponseCode {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
+  ResponseCode responseCode = 1;
+}
+
+message CoordinatesChanged {
+  uint32 identifier = 1;
+  uint32 x = 2;
+  int32 y = 3;
+}

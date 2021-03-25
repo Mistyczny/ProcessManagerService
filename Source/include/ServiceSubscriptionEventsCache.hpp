@@ -25,6 +25,7 @@ public:
 
     uint32_t addSubscriptionEvent(std::unique_ptr<SubscribeEventInterface> newEvent);
     void addSubscriber(Types::ModuleIdentifier moduleIdentifier, std::string&);
+    void addSubscriber(Types::ModuleIdentifier moduleIdentifier, uint32_t& subscriberIdentifier);
     std::vector<std::pair<Types::ModuleIdentifier, google::protobuf::Any>> triggerMessageHandlers(google::protobuf::Any&);
 
     size_t size() const;

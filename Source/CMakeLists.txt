@@ -47,8 +47,8 @@ set_target_properties(Service PROPERTIES PUBLIC_HEADER "${SERVICE_PUBLIC_HEADERS
 target_link_libraries(Service
         PUBLIC
     pthread
-    mongocxx
-    bsoncxx
+    mongo::mongocxx_shared
+    mongo::bsoncxx_shared
     spdlog
     ${PROTOBUF_LIBRARY}
     ${Boost_LIBRARIES}
@@ -58,7 +58,6 @@ target_include_directories(Service
         PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/Source>"
-    "$<BUILD_INTERFACE:${MongoCxxIncludes}>"
 )
 
 target_include_directories(Service

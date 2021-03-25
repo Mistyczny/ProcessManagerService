@@ -9,13 +9,7 @@
 
 namespace Service {
 
-Base::Base() : modulesServer{contextWorkers} {
-    Mongo::DbEnvironment::initialize();
-    for (int i = 0; i < 1; i++) {
-        contextWorkers.emplace_back(ioContextThreads, modulesCache, messageEventsCache, subscriptionEventsCache);
-    }
-    watchdogConnection = std::make_shared<WatchdogConnection>(contextWorkers.front().getContext(), watchdogConnectionState);
-}
+Base::Base() : modulesServer{contextWorkers} { Mongo::DbEnvironment::initialize(); }
 
 Base::~Base() {
     std::for_each(std::begin(contextWorkers), std::end(contextWorkers), [](auto& ioContextWorker) { ioContextWorker.stopIoContext(); });
@@ -24,6 +18,20 @@ Base::~Base() {
             ioContextThread.join();
         }
     });
+}
+
+bool Base::initializeSockets() {
+    bool socketsInitialized{true};
+    try {
+        for (int i = 0; i < 1; i++) {
+            contextWorkers.emplace_back(ioContextThreads, modulesCache, messageEventsCache, subscriptionEventsCache);
+        }
+        watchdogConnection = std::make_shared<WatchdogConnection>(contextWorkers.front().getContext(), watchdogConnectionState);
+    } catch (...) {
+        socketsInitialized = false;
+        std::cout << "Base::initializeSockets() - CAUGHT UNEXPECTED EXCEOPTION" << std::endl;
+    }
+    return socketsInitialized;
 }
 
 void Base::joinAll() {
@@ -53,7 +61,7 @@ bool Base::waitForConnectResponse() {
 
 void Base::readAll() { modulesServer.startReadingAll(); }
 
-void Base::initialize() { EventManager::initialize(this->messageEventsCache); }
+void Base::initialize() { EventManager::initialize(this->messageEventsCache, this->subscriptionEventsCache); }
 
 int Base::runServiceTask() {
     int taskReturn = this->task.run();
