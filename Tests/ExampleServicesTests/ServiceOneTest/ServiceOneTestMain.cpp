@@ -15,7 +15,7 @@ public:
 
     bool validate(const google::protobuf::Any& any) { return any.Is<GPS::CoordinatesUpdateRequest>(); }
 
-    std::optional<google::protobuf::Any> run(const Service::Sender sender, const google::protobuf::Any& any) {
+    std::optional<google::protobuf::Any*> run(const Service::Sender sender, const google::protobuf::Any& any) {
         std::optional<google::protobuf::Any> response{std::nullopt};
         GPS::CoordinatesUpdateRequest coordinatesUpdateRequest{};
         any.UnpackTo(&coordinatesUpdateRequest);
@@ -38,7 +38,7 @@ private:
 public:
     explicit SimpleGetMessageClass(std::shared_ptr<GpsCoordinates> gpsCoordinates) : gpsCoordinates{gpsCoordinates} {}
     bool validate(const google::protobuf::Any& any) { return any.Is<GPS::CoordinatesGetRequest>(); }
-    std::optional<google::protobuf::Any> run(const Service::Sender, const google::protobuf::Any& any) {
+    std::optional<google::protobuf::Any*> run(const Service::Sender, const google::protobuf::Any& any) {
         std::optional<google::protobuf::Any> response{std::nullopt};
         GPS::CoordinatesGetRequest coordinatesGetRequest{};
         any.UnpackTo(&coordinatesGetRequest);
@@ -53,7 +53,7 @@ private:
 public:
     explicit SubscribeUpdateEvent(std::shared_ptr<GpsCoordinates> gpsCoordinates) : gpsCoordinates{gpsCoordinates} {}
     bool validate(const google::protobuf::Any& any) { return any.Is<GPS::SubscribeIdentifierRequest>(); }
-    std::optional<google::protobuf::Any> run(const Service::Sender, const google::protobuf::Any& any) {
+    std::optional<google::protobuf::Any*> run(const Service::Sender, const google::protobuf::Any& any) {
         std::optional<google::protobuf::Any> response{std::nullopt};
         GPS::CoordinatesGetRequest coordinatesGetRequest{};
         any.UnpackTo(&coordinatesGetRequest);
@@ -67,11 +67,19 @@ private:
 
 public:
     explicit SimpleSubscribeUpdateMessage(std::shared_ptr<GpsCoordinates> gpsCoordinates) : gpsCoordinates{gpsCoordinates} {}
-    std::optional<google::protobuf::Any> run(const google::protobuf::Any& any) {
+    std::optional<google::protobuf::Any*> run(const google::protobuf::Any& any) {
+        std::cout << "HERE" << std::endl;
         std::optional<google::protobuf::Any> response{std::nullopt};
         GPS::CoordinatesUpdateRequest coordinatesUpdateRequest{};
         any.UnpackTo(&coordinatesUpdateRequest);
-        return {};
+
+        auto* anyMessage = new google::protobuf::Any();
+        GPS::SubscribeIdentifierRequest subscribeIdentifierRequest{};
+        subscribeIdentifierRequest.set_identifier(coordinatesUpdateRequest.identifier());
+        subscribeIdentifierRequest.set_x(coordinatesUpdateRequest.x());
+        subscribeIdentifierRequest.set_y(coordinatesUpdateRequest.y());
+        anyMessage->PackFrom(subscribeIdentifierRequest);
+        return anyMessage;
     }
 };
 
@@ -84,18 +92,21 @@ int Task::run() {
 
     // Registering message handlers
     auto simpleUpdateEventClass = std::make_shared<SimpleUpdateMessageClass>(gpsCoordinates);
-    std::unique_ptr<EventInterface> updateMessageEvent =
-        std::make_unique<MessageEvent<std::shared_ptr<SimpleUpdateMessageClass>>>(simpleUpdateEventClass);
-    EventManager::registerNewEventHandler(1, std::move(updateMessageEvent));
+    auto updateMessageEvent = std::make_unique<MessageEvent<std::shared_ptr<SimpleUpdateMessageClass>>>(simpleUpdateEventClass);
 
     auto simpleGetEventClass = std::make_shared<SimpleGetMessageClass>(gpsCoordinates);
-    std::unique_ptr<EventInterface> getMessageEvent =
-        std::make_unique<MessageEvent<std::shared_ptr<SimpleGetMessageClass>>>(simpleGetEventClass);
+    auto getMessageEvent = std::make_unique<MessageEvent<std::shared_ptr<SimpleGetMessageClass>>>(simpleGetEventClass);
 
     // Register subsciption event
-    //auto simpleGetEventClass = std::make_shared<SimpleGetMessageClass>(gpsCoordinates);
+    auto simpleSubscribeUpdateMessage = std::make_shared<SimpleSubscribeUpdateMessage>(gpsCoordinates);
+    std::unique_ptr<SubscribeEventInterface> simpleSubscribeUpdateMessageEvent =
+        std::make_unique<SubscribeEvent<std::shared_ptr<SimpleSubscribeUpdateMessage>>>(simpleSubscribeUpdateMessage);
 
+    EventManager::registerNewEventHandler(1, std::move(updateMessageEvent));
     EventManager::registerNewEventHandler(1, std::move(getMessageEvent));
+    GPS::CoordinatesUpdateRequest updateRequest{};
+    EventManager::registerNewSubscribtionHandler(updateRequest.GetTypeName(), std::move(simpleSubscribeUpdateMessageEvent));
+
     return Service::ReturnCodes::RUN_FOREVER;
 }
 

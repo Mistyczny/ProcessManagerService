@@ -7,6 +7,8 @@
  */
 #include "ServiceSubscriptionEventsCache.hpp"
 
+#include <utility>
+
 namespace Service {
 
 uint32_t SubscriptionEventsCache::getNewEventID() const {
@@ -22,14 +24,16 @@ uint32_t SubscriptionEventsCache::getNewEventID() const {
     return availableEventID;
 }
 
-uint32_t SubscriptionEventsCache::addSubscriptionEvent(std::unique_ptr<SubscribeEventInterface> newEvent) {
+uint32_t SubscriptionEventsCache::addSubscriptionEvent(std::string subscribeType, std::unique_ptr<SubscribeEventInterface> newEvent) {
     uint32_t subscriptionEventID{};
     std::unique_lock uniqueLock{sharedMutex};
     if (newEvent) {
+        std::cout << " NEW SUBSCRIPTION EVENT ADDED" << std::endl;
         subscriptionEventID = this->getNewEventID();
         Subscription newSubscription{};
         newSubscription.id = subscriptionEventID;
         newSubscription.event = std::move(newEvent);
+        newSubscription.messageType = std::move(subscribeType);
         events.emplace_back(std::move(newSubscription));
     } else {
         throw std::runtime_error("Trying to add null message event");
@@ -37,18 +41,25 @@ uint32_t SubscriptionEventsCache::addSubscriptionEvent(std::unique_ptr<Subscribe
     return subscriptionEventID;
 }
 
-std::vector<std::pair<Types::ModuleIdentifier, google::protobuf::Any>>
+std::vector<std::pair<Types::ModuleIdentifier, google::protobuf::Any*>>
 SubscriptionEventsCache::triggerMessageHandlers(google::protobuf::Any& anyMessage) {
     std::shared_lock sharedLock{sharedMutex};
-    std::vector<std::pair<Types::ModuleIdentifier, google::protobuf::Any>> serviceRequests{};
+    std::vector<std::pair<Types::ModuleIdentifier, google::protobuf::Any*>> serviceRequests{};
     std::for_each(std::begin(events), std::end(events), [&](auto& event) {
-        if (event.messageType == anyMessage.type_url()) {
+        if (anyMessage.type_url().ends_with(event.messageType)) {
+            std::cout << "TYPE SUBSCRIBE RECIVED: " << event.messageType << std::endl;
             std::for_each(std::begin(event.subscribers), std::end(event.subscribers), [&](auto& subscriber) {
                 auto newMessage = event.event->subscriptionHandle(anyMessage);
                 if (newMessage.has_value()) {
+                    std::cout << "PUTTING RESPONSE" << std::endl;
                     serviceRequests.push_back(std::make_pair(subscriber, std::move(*newMessage)));
+                    std::cout << "POST PUTTING RESPONSE" << std::endl;
+                } else {
+                    std::cout << "NO VALUE" << std::endl;
                 }
             });
+        } else {
+            std::cout << "TYPE DOESNT MATCH: " << event.messageType << " " << anyMessage.type_url() << std::endl;
         }
     });
     return serviceRequests;
@@ -61,9 +72,13 @@ size_t SubscriptionEventsCache::size() const {
 
 void SubscriptionEventsCache::addSubscriber(Types::ModuleIdentifier moduleIdentifier, std::string& typeUrl) {
     std::unique_lock uniqueLock{sharedMutex};
+    std::cout << " NEW SUBSCRIBER EVENT ADDED" << std::endl;
     std::for_each(std::begin(events), std::end(events), [&](auto& event) {
         if (event.messageType == typeUrl) {
+            std::cout << "TYPE MATCH" << std::endl;
             event.subscribers.emplace_back(moduleIdentifier);
+        } else {
+            std::cout << "TYPE DOESNT MATCH" << std::endl;
         }
     });
 }

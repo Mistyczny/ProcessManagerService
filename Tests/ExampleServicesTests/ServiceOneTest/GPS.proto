@@ -3,8 +3,9 @@ syntax = "proto3";
 package GPS;
 
 message CoordinatesUpdateRequest {
-  int32 x = 1;
-  int32 y = 2;
+  uint32 identifier = 1;
+  int32 x = 2;
+  int32 y = 3;
 }
 
 message CoordinatesUpdateResponse {
@@ -28,6 +29,8 @@ message CoordinatesGetResponse {
 
 message SubscribeIdentifierRequest {
   uint32 identifier = 1;
+  uint32 x = 2;
+  uint32 y = 3;
 }
 
 message SubscribeIdentifierResponse {

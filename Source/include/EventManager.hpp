@@ -22,7 +22,6 @@ public:
     static EventManager* getEventManager();
 
     /***
-     *
      * @param id
      * @param messageEvent
      * @return eventHandler
@@ -30,11 +29,11 @@ public:
     static std::optional<uint32_t> registerNewEventHandler(uint32_t id, std::unique_ptr<EventInterface> messageEvent);
 
     /***
-     *
+     * @param subscribeType
      * @param subscriptionEvent
      * @return subscriptionEventHandler
      */
-    static std::optional<uint32_t> registerNewSubscribtionHandler(std::unique_ptr<SubscribeEventInterface> subscriptionEvent);
+    static std::optional<uint32_t> registerNewSubscribtionHandler(std::string subscribeType, std::unique_ptr<SubscribeEventInterface> subscriptionEvent);
 
 
 };

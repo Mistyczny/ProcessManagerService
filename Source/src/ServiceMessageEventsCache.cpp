@@ -28,10 +28,10 @@ uint32_t MessageEventsCache::addMessageEvent(std::unique_ptr<EventInterface> new
     return messageEventID;
 }
 
-std::vector<google::protobuf::Any> MessageEventsCache::triggerMessageHandlers(const Service::Sender sender,
+std::vector<google::protobuf::Any*> MessageEventsCache::triggerMessageHandlers(const Service::Sender sender,
                                                                               const google::protobuf::Any& AnyMessage) {
     std::shared_lock sharedLock{sharedMutex};
-    std::vector<google::protobuf::Any> responses{};
+    std::vector<google::protobuf::Any*> responses{};
     std::for_each(std::begin(events), std::end(events), [&](auto& event) {
         if (event.second->validateMessage(AnyMessage)) {
             auto response = event.second->handleReceivedMessage(sender, AnyMessage);

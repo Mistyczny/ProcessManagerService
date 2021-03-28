@@ -31,11 +31,12 @@ std::optional<uint32_t> EventManager::registerNewEventHandler(uint32_t key, std:
     return eventID;
 }
 
-std::optional<uint32_t> EventManager::registerNewSubscribtionHandler(std::unique_ptr<SubscribeEventInterface> subscriptionEvent) {
+std::optional<uint32_t> EventManager::registerNewSubscribtionHandler(std::string subscribeType,
+                                                                     std::unique_ptr<SubscribeEventInterface> subscriptionEvent) {
     std::optional<uint32_t> eventID{std::nullopt};
     if (subscriptionEvent) {
         try {
-            eventID = eventManager->subscriptionEventsCache.addSubscriptionEvent(std::move(subscriptionEvent));
+            eventID = eventManager->subscriptionEventsCache.addSubscriptionEvent(subscribeType, std::move(subscriptionEvent));
         } catch (std::exception& ex) {
             Log::error("Failed to add message event to the cache with error" + std::string{ex.what()});
         }

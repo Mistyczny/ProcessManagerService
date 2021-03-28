@@ -32,11 +32,12 @@ protobuf_generate_cpp(PROTO_WATCHDOG_SERVICE_SRC PROTO_WATCHDOG_SERVICE_HEADER
 )
 add_library(ProtoWatchdogServiceLibrary SHARED ${PROTO_WATCHDOG_SERVICE_SRC})
 add_dependencies(ProtoWatchdogServiceLibrary WatchdogServiceProtocolDownload)
+
 #
 # Service-Module communication protocol download
 #
 
-set(ServiceModuleProtocolVersion 1.3)
+set(ServiceModuleProtocolVersion 1.4)
 set(ServiceModuleProtocolPackage ServiceModuleProtocol_${ServiceModuleProtocolVersion}.tar)
 ExternalProject_Add(ServiceModuleProtocolDownload
     PREFIX

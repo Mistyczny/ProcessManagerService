@@ -42,18 +42,12 @@ ContextWorker& ContextWorker::operator=(ContextWorker&& other) noexcept {
 
 void ContextWorker::runAll() {
     for (auto threadNr = 0; threadNr < 5; threadNr++) {
-        ioContextThreads.emplace_back([&]() {
-            std::cout << "START IOCONTEXT!" << std::endl;
-            ioContext.run();
-            std::cout << "POST START IOCONTEXT!" << std::endl;
-        });
+        ioContextThreads.emplace_back([&]() { ioContext.run(); });
     }
 }
 
 void ContextWorker::startRead() {
-    std::cout << "START READING!" << std::endl;
     if (socket) {
-        std::cout << "SOCKET EXISTS READING!" << std::endl;
         socket->async_receive_from(
             boost::asio::buffer(messageBuffer), remoteEndpoint, [this](const boost::system::error_code& error, std::size_t bytesRead) {
                 if (error) {
@@ -63,9 +57,6 @@ void ContextWorker::startRead() {
                     std::string receivedMessageBuffer{};
                     receivedMessageBuffer.reserve(bytesRead);
                     std::copy_n(messageBuffer.begin(), bytesRead, std::back_inserter(receivedMessageBuffer));
-
-                    Log::info("Message received");
-                    std::cout << "MESSAGE SIZE: " << bytesRead << std::endl;
 
                     // Create sender structure
                     Sender sender{};
@@ -82,30 +73,40 @@ void ContextWorker::startRead() {
                         const auto operationCode = receivedMessage.header().operationcode();
                         if (operationCode == ServiceModule::ModuleRequest) {
                             Log::info("Message received is module request");
-                            std::cout << "Message received is module request!" << std::endl;
-                            auto responses = messageEventsCache.triggerMessageHandlers(sender, receivedMessage.request().request());
 
-                            std::for_each(std::begin(responses), std::end(responses), [&](auto& response) {
-                                ServiceModule::Message responseMessage{};
-                                auto* responseHeader = new ServiceModule::Header{};
-                                responseHeader->set_senderidentifier(Service::Globals::serviceIdentifier);
-                                responseHeader->set_operationcode(ServiceModule::OperationCode::ServiceResponse);
-                                responseHeader->set_transactioncode(receivedMessage.header().transactioncode());
-                                responseMessage.set_allocated_header(responseHeader);
-                                auto* responseRequest = new ServiceModule::Request{};
-                                responseRequest->CopyFrom(response);
-                                std::string message{};
-                                responseMessage.SerializeToString(&message);
-                                this->socket->async_send_to(boost::asio::buffer(message), sender.senderEndpoint,
-                                                            [](const boost::system::error_code& error, std::size_t bytesRead) {
-                                                                if (error) {
-                                                                    std::cout << "SENDING ERROR" << std::endl;
-                                                                } else {
-                                                                    std::cout << "SENDING SUCCESS" << std::endl;
-                                                                }
-                                                            });
-                            });
-                            this->handleSubscriptions(receivedMessage.request().request());
+                            if (receivedMessage.has_request()) {
+                                std::cout << "RECEIVED REQUEST" << std::endl;
+                                auto responses = messageEventsCache.triggerMessageHandlers(sender, receivedMessage.request().request());
+
+                                std::for_each(std::begin(responses), std::end(responses), [&](auto& response) {
+                                    ServiceModule::Message responseMessage{};
+                                    auto* responseHeader = new ServiceModule::Header{};
+                                    responseHeader->set_senderidentifier(Service::Globals::serviceIdentifier);
+                                    responseHeader->set_operationcode(ServiceModule::OperationCode::ServiceResponse);
+                                    responseHeader->set_transactioncode(receivedMessage.header().transactioncode());
+                                    responseMessage.set_allocated_header(responseHeader);
+                                    auto* responseRequest = new ServiceModule::Request{};
+                                    responseRequest->CopyFrom(*response);
+                                    std::string message{};
+                                    responseMessage.SerializeToString(&message);
+                                    this->socket->async_send_to(boost::asio::buffer(message), sender.senderEndpoint,
+                                                                [](const boost::system::error_code& error, std::size_t bytesRead) {
+                                                                    if (error) {
+                                                                        std::cout << "SENDING ERROR" << std::endl;
+                                                                    } else {
+                                                                        std::cout << "SENDING SUCCESS" << std::endl;
+                                                                    }
+                                                                });
+                                });
+                                this->handleSubscriptions(receivedMessage.request().request());
+                            } else if (receivedMessage.has_subscriptionrequest()) {
+                                std::cout << "RECEIVED SUBSCRIPTION: " << receivedMessage.subscriptionrequest().subscribedtype()
+                                          << std::endl;
+                                std::string subscribingType = receivedMessage.subscriptionrequest().subscribedtype();
+                                this->subscriptionEventsCache.addSubscriber(sender.senderIdentifier, subscribingType);
+                            } else {
+                                std::cout << "Received is invalid: " << operationCode << std::endl;
+                            }
                         } else {
                             Log::info("Message received is not module request: " + std::to_string(operationCode));
                             std::cout << "Message received is not module request: " << operationCode << std::endl;
@@ -127,6 +128,7 @@ void ContextWorker::handleSubscriptions(google::protobuf::Any anyMessage) {
         std::for_each(std::begin(responses), std::end(responses), [&](auto& response) {
             auto destinationModule = modulesCollection.getModule(response.first);
             if (destinationModule.has_value()) {
+                std::cout << "PREPARING" << std::endl;
                 ServiceModule::Message responseMessage{};
                 auto* responseHeader = new ServiceModule::Header{};
                 responseHeader->set_senderidentifier(Service::Globals::serviceIdentifier);
@@ -134,7 +136,9 @@ void ContextWorker::handleSubscriptions(google::protobuf::Any anyMessage) {
                 responseHeader->set_transactioncode(19);
                 responseMessage.set_allocated_header(responseHeader);
                 auto* responseRequest = new ServiceModule::Request{};
-                responseRequest->CopyFrom(response.second);
+                responseRequest->set_allocated_request(response.second);
+                std::cout << "PREPARING POST COPY" << std::endl;
+                responseMessage.set_allocated_request(responseRequest);
                 std::string message{};
                 responseMessage.SerializeToString(&message);
 
