@@ -10,21 +10,17 @@ class SimpleUpdateMessageClass {
 private:
 public:
     bool validate(const google::protobuf::Any& any) { return any.Is<ExamplePrototypes::CoordinatesUpdate>(); }
-    std::optional<google::protobuf::Any> run(const Service::Sender, const google::protobuf::Any& any) {
-        std::cout << "DABI ABU" << std::endl;
-        return {};
-    }
+    std::optional<google::protobuf::Any*> run(const Service::Sender, const google::protobuf::Any& any) { return {}; }
 };
 
 class SimpleGetMessageClass {
 private:
 public:
     bool validate(const google::protobuf::Any& any) { return any.Is<ExamplePrototypes::CoordinatesGet>(); }
-    std::optional<google::protobuf::Any> run(const Service::Sender, const google::protobuf::Any& any) {
+    std::optional<google::protobuf::Any*> run(const Service::Sender, const google::protobuf::Any& any) {
         ExamplePrototypes::CoordinatesGet coordinatesGet{};
         any.UnpackTo(&coordinatesGet);
         std::cout << coordinatesGet.identifier() << std::endl;
-        std::cout << "ABU DABI" << std::endl;
         return {};
     }
 };

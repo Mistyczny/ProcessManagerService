@@ -18,9 +18,9 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "")
 SET(CMAKE_CXX_STANDARD 20)
 
 find_package(Boost 1.71.0 COMPONENTS system filesystem log program_options REQUIRED)
-find_package(Protobuf 3.14 EXACT REQUIRED)
-find_package(mongocxx 3.6.1 REQUIRED)
-find_package(bsoncxx 3.6.1 REQUIRED)
+find_package(Protobuf 3.15.6 EXACT REQUIRED)
+find_package(mongocxx 3.6.2 EXACT REQUIRED)
+find_package(bsoncxx 3.6.2 EXACT REQUIRED)
 find_package(spdlog 1.8.2 EXACT REQUIRED)
 
 set(artifactoryDownloader ${CMAKE_SOURCE_DIR}/Toolkits/artifactory_downloader.sh)
